@@ -1,0 +1,45 @@
+---
+title: "Configuration"
+description: "Adjust UABEA's behavior through the config.json file or the built-in settings UI."
+---
+
+UABEA reads its settings from a `config.json` file located in the **same directory as the UABEA executable**. The file is created automatically with defaults the first time UABEA runs, so you do not need to create it manually.
+
+<Tip>
+  All settings are also accessible through the GUI. You do not need to edit `config.json` by hand unless you prefer to.
+</Tip>
+
+## Settings
+
+<ParamField path="UseDarkTheme" type="boolean" default="false">
+  Switches the application to a dark color theme when set to `true`. The default light theme is used when `false` or when the field is absent.
+</ParamField>
+
+<ParamField path="UseCpp2Il" type="boolean" default="true">
+  Enables [Cpp2IL](https://github.com/SamboyCoding/Cpp2IL) for script type resolution. Cpp2IL reads IL2CPP metadata produced by Unity's IL2CPP scripting backend and uses it to resolve MonoBehaviour script types — allowing UABEA to display MonoBehaviour asset fields by name rather than raw bytes.
+
+  Set to `false` if you do not need MonoBehaviour inspection or if Cpp2IL causes issues with a particular game build.
+</ParamField>
+
+## Example config.json
+
+```json
+{
+  "UseDarkTheme": false,
+  "UseCpp2Il": true
+}
+```
+
+## File location
+
+The config file must live next to the UABEA executable. For example:
+
+```
+my-tools/
+├── UABEAvalonia          # (or UABEAvalonia.exe on Windows)
+└── config.json           # settings file read at startup
+```
+
+<Note>
+  Changes made through the GUI are saved to `config.json` immediately. If you edit the file while UABEA is running, your manual changes will be overwritten the next time a setting is changed inside the app.
+</Note>

@@ -1,0 +1,55 @@
+---
+title: "Introduction"
+description: "UABEA is a cross-platform tool for reading and writing Unity asset bundles and serialized files, built for game modding and research."
+---
+
+UABEA (Unity Asset Bundle Extractor Avalonia) is a cross-platform GUI application for opening, inspecting, and modifying Unity asset bundles and serialized files. It runs on Windows, Linux, and macOS, and is built on top of [AssetsTools.NET](https://github.com/nesrak1/AssetsTools.NET).
+
+<Note>
+  UABEA is primarily a **modding and research tool**, not a bulk asset extractor. If you only need to extract assets for viewing purposes, use [AssetRipper](https://github.com/AssetRipper/AssetRipper) or [AssetStudio](https://github.com/Perfare/AssetStudio/) instead.
+</Note>
+
+## What UABEA can do
+
+UABEA lets you work directly with the files Unity games ship with, rather than reconstructing a Unity project from them.
+
+- **View and edit assets** — inspect any asset's serialized fields and modify values directly
+- **Import and export** — export assets as raw binary or JSON dump files; import edited dumps back
+- **Asset bundle support** — open, decompress, and repack Unity asset bundles (`.bundle`, `.ab`, `.unity3d`)
+- **Serialized file editing** — read and write `.assets` files that store scene and resource data
+- **Mod packaging (EMIP)** — bundle your changes into a distributable EMIP mod package that others can apply
+- **Plugin system** — extend UABEA with plugins for textures, audio clips, fonts, text assets, and custom asset types
+
+## Supported file formats
+
+| Format | Description |
+|---|---|
+| Asset bundles | Compressed or uncompressed bundles (`.bundle`, `.ab`, `.unity3d`, and others) |
+| Serialized files | Raw Unity serialized data files (`.assets`, `level*`, `sharedassets*`) |
+| Decompressed bundles | `.decomp` files produced when UABEA decompresses a bundle for editing |
+| EMIP packages | Mod packages created in UABEA for distributing asset patches |
+
+## How UABEA differs from AssetRipper and AssetStudio
+
+[AssetRipper](https://github.com/AssetRipper/AssetRipper) and [AssetStudio](https://github.com/Perfare/AssetStudio/) are primarily extraction tools — they convert Unity assets into usable formats (meshes, textures, audio) for viewing or reimporting into Unity. UABEA operates at a lower level: it reads and writes the raw serialized data, making it suited for targeted edits and mod creation rather than wholesale project reconstruction.
+
+## Built on AssetsTools.NET
+
+UABEA uses [AssetsTools.NET](https://github.com/nesrak1/AssetsTools.NET) as its underlying library for parsing and serializing Unity asset formats. AssetsTools.NET handles the low-level details of Unity's binary serialization, bundle compression, and type tree reading.
+
+## Community
+
+Join the UABEA community on Discord for help, mod sharing, and development discussion:
+
+[discord.gg/hd9VdswwZs](https://discord.gg/hd9VdswwZs)
+
+## Get started
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/installation">
+    Download UABEA for Windows, Linux, or macOS and get it running.
+  </Card>
+  <Card title="Quick start" icon="rocket" href="/quickstart">
+    Open your first asset bundle and explore its contents.
+  </Card>
+</CardGroup>

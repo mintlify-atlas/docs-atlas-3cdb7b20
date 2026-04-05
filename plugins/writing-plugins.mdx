@@ -1,0 +1,272 @@
+---
+title: "Writing plugins"
+description: "Developer guide for creating custom UABEA plugins using the UABEAPlugin and UABEAPluginOption interfaces."
+---
+
+UABEA's plugin system lets you add import and export actions for any asset type. A plugin is a standard .NET class library compiled to a `.dll` and placed in the `plugins/` directory next to the UABEA executable.
+
+## Interfaces
+
+### `UABEAPlugin`
+
+The entry point for every plugin. UABEA scans each DLL for a class that implements this interface and calls `Init()` once at startup.
+
+```csharp
+public interface UABEAPlugin
+{
+    public PluginInfo Init();
+}
+```
+
+`Init()` must return a populated `PluginInfo` object.
+
+### `PluginInfo`
+
+Describes the plugin and lists the options it provides.
+
+```csharp
+public class PluginInfo
+{
+    public string name;
+    public List<UABEAPluginOption> options;
+}
+```
+
+| Field | Description |
+|---|---|
+| `name` | Display name for the plugin (used internally; not currently shown in the UI). |
+| `options` | One or more `UABEAPluginOption` instances, each representing a distinct action. |
+
+### `UABEAPluginOption`
+
+Each option corresponds to one entry that can appear in the plugin action list. Implement this interface once per action.
+
+```csharp
+public interface UABEAPluginOption
+{
+    public bool SelectionValidForPlugin(
+        AssetsManager am,
+        UABEAPluginAction action,
+        List<AssetContainer> selection,
+        out string name);
+
+    public Task<bool> ExecutePlugin(
+        Window win,
+        AssetWorkspace workspace,
+        List<AssetContainer> selection);
+}
+```
+
+#### `SelectionValidForPlugin`
+
+Called for each loaded option against every Import and Export action to determine what to show in the menu. Return `true` if this option should appear.
+
+| Parameter | Description |
+|---|---|
+| `am` | The `AssetsManager` instance, used to load additional dependencies or class databases. |
+| `action` | The action being tested — `UABEAPluginAction.Import` or `UABEAPluginAction.Export`. |
+| `selection` | The list of currently selected asset containers. |
+| `name` (out) | The label shown in the plugin menu. Set this even when returning `false`. |
+
+#### `ExecutePlugin`
+
+Called when the user selects the action. Runs asynchronously. Return `true` on success, `false` on failure or cancellation.
+
+| Parameter | Description |
+|---|---|
+| `win` | The parent Avalonia `Window`, used for showing dialogs and file pickers. |
+| `workspace` | The `AssetWorkspace` instance. Use `workspace.GetBaseField(cont)` to read asset data and `workspace.AddReplacer(...)` to queue modifications. |
+| `selection` | The selected asset containers. |
+
+### `UABEAPluginAction`
+
+```csharp
+public enum UABEAPluginAction
+{
+    Import  = 1,
+    Export  = 2,
+    Console = 4,
+    Create  = 8,
+    All     = 15
+}
+```
+
+UABEA currently tests `Import` and `Export` when populating the plugin menu. `Console` and `Create` are defined in the enum but not yet used by the host.
+
+## Step-by-step: creating a plugin
+
+<Steps>
+  <Step title="Create a class library project">
+    Create a new .NET class library targeting `net8.0`.
+
+    ```bash
+    dotnet new classlib -n MyAssetPlugin -f net8.0
+    ```
+  </Step>
+  <Step title="Add references">
+    Add references to `UABEAvalonia.dll` and `AssetsTools.NET.dll` from the UABEA build output. Both are required to implement the plugin interfaces and read asset data.
+
+    ```xml
+    <ItemGroup>
+      <Reference Include="UABEAvalonia">
+        <HintPath>path/to/UABEAvalonia.dll</HintPath>
+      </Reference>
+      <Reference Include="AssetsTools.NET">
+        <HintPath>path/to/AssetsTools.NET.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+    ```
+
+    Add the Avalonia package so you can use `Window` and `StorageProvider` for file dialogs:
+
+    ```bash
+    dotnet add package Avalonia --version 11.0.1
+    ```
+  </Step>
+  <Step title="Implement UABEAPluginOption">
+    Create a class for each action your plugin provides.
+
+    ```csharp
+    using AssetsTools.NET;
+    using AssetsTools.NET.Extra;
+    using Avalonia.Controls;
+    using Avalonia.Platform.Storage;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Threading.Tasks;
+    using UABEAvalonia;
+    using UABEAvalonia.Plugins;
+
+    namespace MyAssetPlugin
+    {
+        public class ExportMyAssetOption : UABEAPluginOption
+        {
+            public bool SelectionValidForPlugin(
+                AssetsManager am,
+                UABEAPluginAction action,
+                List<AssetContainer> selection,
+                out string name)
+            {
+                name = "Export my asset";
+
+                if (action != UABEAPluginAction.Export)
+                    return false;
+
+                // Only match a specific class ID — replace 114 with your target type.
+                foreach (AssetContainer cont in selection)
+                {
+                    if (cont.ClassId != 114)
+                        return false;
+                }
+                return true;
+            }
+
+            public async Task<bool> ExecutePlugin(
+                Window win,
+                AssetWorkspace workspace,
+                List<AssetContainer> selection)
+            {
+                AssetContainer cont = selection[0];
+                AssetTypeValueField baseField = workspace.GetBaseField(cont);
+
+                string name = baseField["m_Name"].AsString;
+
+                var selectedFile = await win.StorageProvider.SaveFilePickerAsync(
+                    new FilePickerSaveOptions()
+                    {
+                        Title = "Export asset",
+                        SuggestedFileName = name
+                    });
+
+                string path = FileDialogUtils.GetSaveFileDialogFile(selectedFile);
+                if (path == null)
+                    return false;
+
+                // Write your asset data here.
+                byte[] data = baseField["someField"].AsByteArray;
+                File.WriteAllBytes(path, data);
+
+                return true;
+            }
+        }
+    }
+    ```
+  </Step>
+  <Step title="Implement UABEAPlugin">
+    Create the plugin entry point and register your options.
+
+    ```csharp
+    namespace MyAssetPlugin
+    {
+        public class MyAssetPlugin : UABEAPlugin
+        {
+            public PluginInfo Init()
+            {
+                return new PluginInfo()
+                {
+                    name = "My Asset Plugin",
+                    options = new List<UABEAPluginOption>
+                    {
+                        new ExportMyAssetOption()
+                    }
+                };
+            }
+        }
+    }
+    ```
+  </Step>
+  <Step title="Build and deploy">
+    Build the project and copy the output DLL into the `plugins/` directory next to the UABEA executable. UABEA will load it automatically on the next launch.
+
+    ```bash
+    dotnet build -c Release
+    cp bin/Release/net8.0/MyAssetPlugin.dll /path/to/uabea/plugins/
+    ```
+  </Step>
+</Steps>
+
+## Modifying assets
+
+To write changes back to the workspace, use `AssetsReplacerFromMemory` and call `workspace.AddReplacer`:
+
+```csharp
+byte[] savedAsset = baseField.WriteToByteArray();
+
+var replacer = new AssetsReplacerFromMemory(
+    cont.PathId,
+    cont.ClassId,
+    cont.MonoId,
+    savedAsset);
+
+workspace.AddReplacer(cont.FileInstance, replacer, new MemoryStream(savedAsset));
+```
+
+Changes are staged in memory. The user writes them to disk using the **Save** action in the UABEA UI.
+
+## Reading asset fields
+
+Use AssetsTools.NET's `AssetTypeValueField` API to traverse the asset tree:
+
+```csharp
+AssetTypeValueField baseField = workspace.GetBaseField(cont);
+
+// Read a string field
+string name = baseField["m_Name"].AsString;
+
+// Read an integer
+int width = baseField["m_Width"].AsInt;
+
+// Read a byte array
+byte[] data = baseField["m_Script"].AsByteArray;
+
+// Navigate nested fields
+string path = baseField["m_StreamData"]["path"].AsString;
+```
+
+<Tip>
+  Use UABEA's own asset inspector to explore the field structure of any asset type before writing code against it. Select an asset, click **View data**, and browse the field tree.
+</Tip>
+
+<Note>
+  AssetsTools.NET is documented separately. Refer to its repository and the built-in plugins in the UABEA source tree (`TexturePlugin`, `FontPlugin`, `AudioClipPlugin`, `TextAssetPlugin`) as working reference implementations.
+</Note>

@@ -1,0 +1,148 @@
+---
+title: "CLI command reference"
+description: "Run UABEA operations from the command line for batch processing and automation."
+---
+
+<Warning>
+  Command line support is **very early and experimental**. There is a high chance of things breaking. Use at your own risk.
+</Warning>
+
+UABEA exposes three commands for batch processing asset bundles and applying mod packages without opening the GUI.
+
+## Commands
+
+<AccordionGroup>
+
+<Accordion title="batchexportbundle" icon="file-export" defaultOpen={false}>
+
+Exports all serialized files from every asset bundle found in a directory.
+
+```bash
+UABEAvalonia batchexportbundle <directory>
+```
+
+By default, each exported file is named `<bundle_filename>_<entry_name>` and written into the same directory. Pass `-keepnames` to write files using only the entry name as it appears inside the bundle.
+
+**Example**
+
+```bash
+# Export all bundles in the current directory, keeping .decomp files
+UABEAvalonia batchexportbundle ./game_bundles -kd
+
+# Export with exact bundle-internal names (not compatible with batchimportbundle)
+UABEAvalonia batchexportbundle ./game_bundles -keepnames
+```
+
+**Flags**
+
+<ParamField path="-keepnames" type="flag">
+  Write exported files using only the entry name as it appears inside the bundle, rather than prepending the bundle filename.
+
+  <Warning>Files exported with `-keepnames` cannot be re-imported with `batchimportbundle`.</Warning>
+</ParamField>
+
+<ParamField path="-kd" type="flag">
+  Keep `.decomp` files after the operation completes. When UABEA decompresses a compressed bundle, it writes a `.decomp` file alongside the original. Use this flag to preserve those files (for example, to inspect decompressed bundles manually).
+</ParamField>
+
+<ParamField path="-fd" type="flag">
+  Overwrite existing `.decomp` files if they already exist. Without this flag, UABEA will skip creating a new `.decomp` file when one is already present.
+</ParamField>
+
+<ParamField path="-md" type="flag">
+  Decompress bundles into memory instead of writing `.decomp` files to disk. When this flag is set, `-kd` and `-fd` have no effect.
+</ParamField>
+
+</Accordion>
+
+<Accordion title="batchimportbundle" icon="file-import" defaultOpen={false}>
+
+Imports serialized files back into asset bundles in a directory. This is the reverse of `batchexportbundle`.
+
+```bash
+UABEAvalonia batchimportbundle <directory>
+```
+
+UABEA matches files to bundles by looking for files named `<bundle_filename>_<entry_name>` in the same directory. Only entries with a matching file on disk are replaced; others are left untouched.
+
+<Note>
+  Only files exported **without** `-keepnames` are compatible with this command. The `<bundle_filename>_` prefix is required for the name-matching logic to work.
+</Note>
+
+**Example**
+
+```bash
+# Import modified assets back into bundles, decompressing into memory
+UABEAvalonia batchimportbundle ./game_bundles -md
+```
+
+**Flags**
+
+<ParamField path="-kd" type="flag">
+  Keep `.decomp` files after the operation completes.
+</ParamField>
+
+<ParamField path="-fd" type="flag">
+  Overwrite existing `.decomp` files if they already exist.
+</ParamField>
+
+<ParamField path="-md" type="flag">
+  Decompress bundles into memory instead of writing `.decomp` files to disk. `-kd` and `-fd` have no effect when this flag is set.
+</ParamField>
+
+</Accordion>
+
+<Accordion title="applyemip" icon="box-archive" defaultOpen={false}>
+
+Applies an EMIP mod package (`.emip`) to a game directory.
+
+```bash
+UABEAvalonia applyemip <emip file> <directory>
+```
+
+Before modifying any file, UABEA creates a numbered backup alongside the original:
+
+- First run: `filename.bak0000`
+- Second run: `filename.bak0001`
+- And so on, up to `.bak9999` (10,000 backup slots total)
+
+If all 10,000 backup slots are already taken (`.bak0000` through `.bak9999`), UABEA exits without making changes to protect you from accidental data loss.
+
+**Example**
+
+```bash
+# Apply a mod package, decompressing bundles into memory
+UABEAvalonia applyemip ./MyMod.emip ./game_data -md
+
+# Apply a mod package, keeping decompressed bundle files afterwards
+UABEAvalonia applyemip ./MyMod.emip ./game_data -kd
+```
+
+**Flags**
+
+<ParamField path="-md" type="flag">
+  Decompress bundles into memory instead of writing `.decomp` files to disk. `-kd` and `-fd` have no effect when this flag is set.
+</ParamField>
+
+<ParamField path="-kd" type="flag">
+  Keep `.decomp` files after the operation completes.
+</ParamField>
+
+<ParamField path="-fd" type="flag">
+  Overwrite existing `.decomp` files if they already exist.
+</ParamField>
+
+</Accordion>
+
+</AccordionGroup>
+
+## Decompression flag summary
+
+All three commands share the same set of decompression flags. Here is a quick reference:
+
+| Flag | Effect | Notes |
+|---|---|---|
+| _(none)_ | Write `.decomp` file, delete it when done | Default behavior |
+| `-kd` | Write `.decomp` file, keep it after the operation | Useful for manual inspection |
+| `-fd` | Write `.decomp` file, overwriting any existing one | Combine with `-kd` to keep the result |
+| `-md` | Decompress into memory, no `.decomp` file written | `-kd` and `-fd` are ignored |

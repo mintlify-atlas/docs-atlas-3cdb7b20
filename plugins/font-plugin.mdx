@@ -1,0 +1,40 @@
+---
+title: "Font plugin"
+description: "Import and export TrueType and OpenType font files embedded in Unity Font assets."
+---
+
+The font plugin handles `Font` assets. It reads and writes the `m_FontData` byte array field, which Unity uses to store the raw font file embedded inside the asset.
+
+## Actions
+
+| Action | Menu label | Works on |
+|---|---|---|
+| Import | "Import .ttf/.otf" | Single or multiple assets |
+| Export | "Export .ttf/.otf" | Single or multiple assets |
+
+### Export
+
+Extracts the raw font bytes from `m_FontData` and saves them as a font file. The plugin auto-detects the format by inspecting the first four bytes of the data:
+
+- `OTTO` magic bytes → `.otf` (OpenType)
+- Anything else → `.ttf` (TrueType)
+
+- **Single export** — prompts for a save location. Suggests `<name>-<filename>-<pathId>` as the filename with the detected extension.
+- **Batch export** — prompts for an output directory and exports all selected fonts in one pass, skipping any asset whose `m_FontData` is empty.
+
+<Warning>
+  Some `Font` assets do not store data in `m_FontData` — they reference a font installed on the system instead. These assets cannot be exported and the plugin will display an error message for them.
+</Warning>
+
+### Import
+
+Reads a `.ttf` or `.otf` file from disk and replaces the `m_FontData` array in the selected asset. The change is queued as a replacer in the workspace and is not written to disk until you save.
+
+- **Single import** — opens a file picker filtered to `.ttf` and `.otf` files.
+- **Batch import** — prompts for a source directory, then presents UABEA's standard import batch dialog to match font files to assets.
+
+## Notes
+
+- The plugin operates directly on the serialized byte array. It does not validate that the imported file is a valid font.
+- Only the raw font data is replaced. Other font asset fields (atlas texture references, glyph tables, line height, etc.) are not modified by an import.
+- To regenerate glyph metrics after replacing a font, you would need to reimport the asset inside the Unity Editor.

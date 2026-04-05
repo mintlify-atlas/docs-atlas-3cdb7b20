@@ -1,0 +1,106 @@
+---
+title: "Applying mods"
+description: "Apply a .emip mod package to a game installation using the UABEA GUI or command line."
+---
+
+A `.emip` package file can be applied to a game installation in two ways: through the UABEA graphical interface, or via the command line for scripted or headless workflows.
+
+<Warning>
+Always back up your game files before applying a mod. UABEA creates backup files automatically (see [Backup files](#backup-files)), but keeping your own copy is good practice.
+</Warning>
+
+<Tabs>
+  <Tab title="GUI">
+
+## Applying a mod in the GUI
+
+<Steps>
+  <Step title="Open the Load Package File dialog">
+    In UABEA, go to **File → Load Package File**. A file picker opens — select your `.emip` file and click **Open**.
+
+    The **Load Mod Package** dialog appears, showing the affected files listed in the package.
+  </Step>
+
+  <Step title="Set the base folder">
+    Click **Browse** next to the **Base folder** field and select the root directory of your game installation.
+
+    The file list updates to show the resolved full paths for each affected file. Each entry displays `(Selected)` when active.
+  </Step>
+
+  <Step title="Select files to apply">
+    Double-click a file entry in the tree to toggle it. Only selected files will be patched when you confirm.
+
+    If all files look correct, leave them all selected.
+  </Step>
+
+  <Step title="Apply the mod">
+    Click **OK**. UABEA opens each selected assets file, applies the replacers from the package, and opens an InfoWindow showing the patched workspace.
+
+    From the InfoWindow you can save the changes to disk using **File → Save**.
+  </Step>
+</Steps>
+
+  </Tab>
+  <Tab title="CLI">
+
+## Applying a mod from the command line
+
+The `applyemip` command applies an `.emip` file directly to game files on disk without opening the GUI.
+
+```bash
+UABEAvalonia applyemip <emip file> <directory>
+```
+
+| Argument | Description |
+|----------|-------------|
+| `<emip file>` | Path to the `.emip` file to apply. |
+| `<directory>` | Root directory of the game installation. Affected file paths inside the package are resolved relative to this directory. |
+
+### Example
+
+```bash
+UABEAvalonia applyemip my-mod.emip "/path/to/MyGame_Data"
+```
+
+UABEA prints the mod name, creators, and description, then processes each affected file in sequence:
+
+1. For bundle files: decompresses the bundle, writes a `.mod` temporary file, then swaps it into place.
+2. For serialized assets files: reads the file, applies replacers, writes a `.mod` temporary file, then swaps it into place.
+
+### Flags
+
+The following flags can be appended to the command:
+
+| Flag | Description |
+|------|-------------|
+| `-md` | Decompress bundles into memory instead of writing a `.decomp` file to disk. |
+| `-kd` | Keep `.decomp` files after applying. Useful if you want the decompressed bundles. |
+| `-fd` | Overwrite existing `.decomp` files instead of reusing them. |
+
+<Note>
+`-kd` and `-fd` have no effect when `-md` is set, since no `.decomp` file is written.
+</Note>
+
+```bash
+# Decompress to memory (no .decomp files written)
+UABEAvalonia applyemip my-mod.emip "/path/to/MyGame_Data" -md
+
+# Keep .decomp files for inspection
+UABEAvalonia applyemip my-mod.emip "/path/to/MyGame_Data" -kd
+```
+
+  </Tab>
+</Tabs>
+
+## Backup files
+
+Before overwriting any game file, UABEA renames the original to a numbered backup:
+
+```
+sharedassets0.assets      →  sharedassets0.assets.bak0000
+sharedassets0.assets      →  sharedassets0.assets.bak0001  (on next apply)
+```
+
+Backups are named `.bak0000`, `.bak0001`, and so on, up to `.bak9999`. If 10,000 backups already exist, UABEA stops and exits rather than overwriting them.
+
+To restore a file, rename the appropriate `.bak` file back to its original name.

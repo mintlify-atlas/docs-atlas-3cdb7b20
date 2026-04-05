@@ -1,0 +1,44 @@
+---
+title: "TextAsset plugin"
+description: "Import and export the raw content of TextAsset assets, including scripts, configuration files, and binary data."
+---
+
+The TextAsset plugin handles `TextAsset` assets. It reads and writes the `m_Script` byte array field, which holds the raw content of whatever file was imported into Unity as a TextAsset.
+
+## Actions
+
+| Action | Menu label | Works on |
+|---|---|---|
+| Import | "Import .txt" | Single or multiple assets |
+| Export | "Export .txt" | Single or multiple assets |
+
+### Export
+
+Reads the `m_Script` byte array and writes it to a file on disk.
+
+- **Single export** — prompts for a save location. If the asset has a `uContainer` path with a recognized file extension (e.g., `.json`, `.xml`, `.lua`), that extension is offered as the default and shown as the first file type filter. Otherwise, defaults to `.txt`.
+- **Batch export** — prompts for an output directory and writes each asset as `<name>-<filename>-<pathId><ext>`. The extension is derived from the container path when available, or `.txt` as a fallback.
+
+### Import
+
+Reads a file from disk as raw bytes and replaces the `m_Script` field. The change is queued as a replacer in the workspace and is not written to disk until you save.
+
+- **Single import** — opens a file picker. If the asset has a container extension, it is listed as the first file type option. `.txt` and "All types" are always available.
+- **Batch import** — prompts for a source directory, then shows the standard import batch dialog. Any file extension is accepted during batch import.
+
+<Note>
+  TextAsset data is stored and replaced as raw bytes, not as a Unicode string. This means binary TextAssets (for example, compiled Lua bytecode, custom binary formats, or LZMA-compressed data) can be exported and re-imported without corruption.
+</Note>
+
+## Common use cases
+
+TextAssets in Unity games frequently contain:
+
+- **JSON or XML configuration** — game settings, level definitions, localization tables.
+- **Lua or custom scripts** — interpreted at runtime by embedded scripting engines.
+- **Shader source** — GLSL or HLSL source bundled for runtime compilation.
+- **Custom binary formats** — asset tables, nav meshes, or dialogue trees in proprietary formats.
+
+<Tip>
+  When exporting a TextAsset whose content is human-readable, open it in a text editor to inspect and edit it, then import the modified file back using the plugin.
+</Tip>

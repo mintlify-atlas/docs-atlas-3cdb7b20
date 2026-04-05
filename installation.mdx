@@ -1,0 +1,115 @@
+---
+title: "Installation"
+description: "Download and install UABEA on Windows, Linux, or macOS."
+---
+
+UABEA is distributed as a self-contained executable. No installer is required — extract the archive and run the binary.
+
+## Requirements
+
+UABEA targets **.NET 8.0** and is published as an ahead-of-time (AOT) compiled native binary, so no .NET runtime installation is required on your machine. The download is self-contained.
+
+## Download
+
+<CardGroup cols={3}>
+  <Card title="Latest nightly (Windows)" icon="windows" href="https://nightly.link/nesrak1/UABEA/workflows/dotnet-desktop/master/uabea-windows.zip">
+    Built from the latest commit on the `master` branch.
+  </Card>
+  <Card title="Latest nightly (Linux)" icon="linux" href="https://nightly.link/nesrak1/UABEA/workflows/dotnet-ubuntu/master/uabea-ubuntu.zip">
+    Built from the latest commit on the `master` branch.
+  </Card>
+  <Card title="GitHub releases" icon="tag" href="https://github.com/nesrak1/UABEA/releases">
+    Stable, versioned releases. Recommended for production use.
+  </Card>
+</CardGroup>
+
+<Note>
+  Nightly builds include the latest bug fixes and features but may be less stable than a tagged release. For mod distribution, prefer a stable release so that recipients use a consistent version.
+</Note>
+
+## Installation steps
+
+<Tabs>
+  <Tab title="Windows">
+    <Steps>
+      <Step title="Download the archive">
+        Download `uabea-windows.zip` from the [latest nightly](https://nightly.link/nesrak1/UABEA/workflows/dotnet-desktop/master/uabea-windows.zip) or from [GitHub Releases](https://github.com/nesrak1/UABEA/releases).
+      </Step>
+      <Step title="Extract the archive">
+        Right-click the `.zip` file and select **Extract All**, or use a tool such as 7-Zip. Extract to a permanent location such as `C:\Tools\UABEA\`.
+
+        <Warning>
+          Do not run UABEA directly from inside a `.zip` file. Extract first, or the application will not be able to read `classdata.tpk` and other required files.
+        </Warning>
+      </Step>
+      <Step title="Run UABEA">
+        Open the extracted folder and double-click **UABEAvalonia.exe** to launch the application.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="Linux">
+    <Steps>
+      <Step title="Download the archive">
+        Download `uabea-ubuntu.zip` from the [latest nightly](https://nightly.link/nesrak1/UABEA/workflows/dotnet-ubuntu/master/uabea-ubuntu.zip) or from [GitHub Releases](https://github.com/nesrak1/UABEA/releases).
+      </Step>
+      <Step title="Extract the archive">
+        ```bash
+        unzip uabea-ubuntu.zip -d ~/tools/uabea
+        ```
+      </Step>
+      <Step title="Make the binary executable">
+        ```bash
+        chmod +x ~/tools/uabea/UABEAvalonia
+        ```
+      </Step>
+      <Step title="Run UABEA">
+        ```bash
+        ~/tools/uabea/UABEAvalonia
+        ```
+
+        You can also create a desktop entry or symlink in `/usr/local/bin` for convenience.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="macOS">
+    <Note>
+      No prebuilt macOS nightly binary is provided. You need to build UABEA from source.
+    </Note>
+    <Steps>
+      <Step title="Install prerequisites">
+        Install the [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) and [Git](https://git-scm.com/).
+      </Step>
+      <Step title="Clone the repository">
+        ```bash
+        git clone https://github.com/nesrak1/UABEA.git
+        cd UABEA
+        ```
+      </Step>
+      <Step title="Build the project">
+        ```bash
+        dotnet build UABEAvalonia/UABEAvalonia.csproj -c Release
+        ```
+      </Step>
+      <Step title="Run UABEA">
+        ```bash
+        dotnet run --project UABEAvalonia/UABEAvalonia.csproj
+        ```
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+## Verify the installation
+
+When UABEA launches successfully, the main window opens with an empty asset list and the menu bar showing **File**, **Tools**, and **Help**. If you see an error about `classdata.tpk` being missing, make sure you extracted the full archive contents — this file must be in the same directory as the executable.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Quick start" icon="rocket" href="/quickstart">
+    Open your first asset bundle and view an asset.
+  </Card>
+  <Card title="Opening files" icon="folder-open" href="/guides/opening-files">
+    Learn about the different file types UABEA can open.
+  </Card>
+</CardGroup>

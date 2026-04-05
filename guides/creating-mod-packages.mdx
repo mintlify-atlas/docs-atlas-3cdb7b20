@@ -1,0 +1,70 @@
+---
+title: "Creating mod packages"
+description: "Use the Mod Maker dialog to export your asset changes as a distributable .emip file."
+---
+
+After editing assets in UABEA, you can export all pending changes as a single `.emip` package file. Recipients can then apply the package without needing to open or edit asset files themselves.
+
+<Note>
+Only unsaved (pending) changes in the current workspace are available for packaging. Make all your edits before opening the Mod Maker dialog.
+</Note>
+
+## Open the Mod Maker dialog
+
+With an asset file open and edits staged, go to **File → Create Package File**. The Mod Maker dialog opens and lists every pending change, grouped by the source assets file.
+
+The tree view shows two top-level nodes:
+
+- **Affected bundles** — pending changes to assets files that live inside an asset bundle.
+- **Affected assets files** — pending changes to plain serialized assets files.
+
+Each node expands to show the individual replace or remove operations by path ID.
+
+## Create a package
+
+<Steps>
+  <Step title="Set the base folder">
+    Click **Browse** next to the **Base folder** field and select the root directory of the game installation. UABEA uses this path to compute relative paths for each affected file.
+
+    The tree updates immediately — each affected file is shown as a path relative to the base folder you set. Check that the paths look correct before continuing.
+
+    <Tip>
+    The base folder must be an ancestor of every affected assets file. If a path shows as an absolute path rather than a relative one, the base folder is set incorrectly.
+    </Tip>
+  </Step>
+
+  <Step title="Fill in the mod metadata">
+    Complete the three text fields:
+
+    | Field | Description |
+    |-------|-------------|
+    | **Mod name** | Short, human-readable name shown when the package is applied. |
+    | **Credits** | Author name(s). Displayed alongside the mod name on apply. |
+    | **Description** | Free-text description of what the mod changes. |
+
+    All three fields are optional but recommended so that users know what a package does before applying it.
+  </Step>
+
+  <Step title="Export the .emip file">
+    Click **OK**. A save dialog opens — choose a location and filename, then click **Save**. UABEA writes the `.emip` file and closes the dialog.
+  </Step>
+</Steps>
+
+## Importing an existing .emip to extend it
+
+The **Import** button lets you load an existing `.emip` and merge its changes into the current session. After clicking **Import**:
+
+1. Select the `.emip` file to import.
+2. Select the base folder for that package (the same game root used when it was created).
+
+The imported replacers are added to the tree alongside any changes already staged in the current workspace. You can then export the combined set as a new `.emip`.
+
+## What gets packaged
+
+The `.emip` file contains only the **changed asset objects** — not the full contents of any game file. Each changed object is stored as a replacer entry with its path ID, class ID, and the new serialized bytes. The original game files are not included.
+
+This keeps package sizes small and means the same `.emip` can generally be re-applied after a minor game update, provided the relevant path IDs have not changed.
+
+<Warning>
+Always test your mod after packaging. Apply the `.emip` to a copy of the game and verify that the expected changes are present and the game runs without errors.
+</Warning>

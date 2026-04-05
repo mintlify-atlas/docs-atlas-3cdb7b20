@@ -1,0 +1,98 @@
+---
+title: "EMIP format"
+description: "Binary format reference for Easy Mod Installer Package (.emip) files used to distribute Unity game mods."
+---
+
+EMIP (Easy Mod Installer Package) is a binary file format for distributing Unity game mods as a single self-contained package. An `.emip` file bundles the changed asset data and metadata needed to apply those changes to a target game installation. UABEA can both produce and consume `.emip` files.
+
+## File structure
+
+The file is written in **little-endian** byte order throughout.
+
+### Header
+
+| Offset | Size | Type | Field | Description |
+|--------|------|------|-------|-------------|
+| 0 | 4 | ASCII string | `magic` | Always `EMIP`. Reading fails if this does not match. |
+| 4 | 1 | `byte` | `includesCldb` | Non-zero if the file embeds a class database (`ClassDatabaseFile`). |
+| 5 | variable | length-prefixed string (int16) | `modName` | Human-readable name of the mod. |
+| + | variable | length-prefixed string (int16) | `modCreators` | Author or author list. |
+| + | variable | length-prefixed string (int16) | `modDescription` | Free-text description of the mod. |
+
+All strings are prefixed with a 2-byte (int16) length value, followed by the string bytes — no null terminator.
+
+### Optional class database
+
+If `includesCldb` is non-zero, a `ClassDatabaseFile` immediately follows the description fields. This is used when a mod introduces asset types not present in the game's original class package.
+
+<Note>
+UABEA's Mod Maker dialog currently always sets `includesCldb` to `false`. The class database section is reserved for future use.
+</Note>
+
+### Affected files list
+
+After the optional class database, a 4-byte int32 gives the count of affected game files, followed by one descriptor per file.
+
+**Per affected file:**
+
+| Size | Type | Field | Description |
+|------|------|-------|-------------|
+| 1 | `byte` | `isBundle` | Non-zero if the target is an asset bundle; zero if it is a plain serialized assets file. |
+| variable | length-prefixed string (int16) | `path` | Relative path from the game root to the file (e.g. `sharedassets0.assets`). |
+| 4 | int32 | replacer count | Number of replacer entries that follow. |
+
+Each replacer entry is parsed recursively and can be one of two types depending on `fileType`.
+
+## Replacer types
+
+### Bundle replacer (`fileType = 0`)
+
+Used when `isBundle` is `true`. Describes modifications to a named entry inside an asset bundle.
+
+| Size | Type | Field | Description |
+|------|------|-------|-------------|
+| 2 | int16 | `replacerType` | `4` = `BundleReplacerFromAssets` |
+| 1 | byte | `fileType` | `0` |
+| variable | string (int16) | `oldName` | Entry name in the bundle before the mod. |
+| variable | string (int16) | `newName` | Entry name after the mod (often the same). |
+| 1 | byte | `hasSerializedData` | Whether the entry contains serialized asset data. |
+| 8 | int64 | replacer count | Number of `AssetsReplacer` entries nested inside. |
+
+Each nested entry is an assets replacer (see below) that targets a specific object within the bundle entry.
+
+### Assets replacer (`fileType = 1`)
+
+Used when `isBundle` is `false`, or nested inside a bundle replacer. Describes a change to a single asset object.
+
+| Size | Type | Field | Description |
+|------|------|-------|-------------|
+| 2 | int16 | `replacerType` | `0` = remove; `2` = replace/add |
+| 1 | byte | `fileType` | `1` |
+| 1 | byte | _(reserved)_ | Always `1`. |
+| 4 | int32 | `fileId` | File index within the assets file. |
+| 8 | int64 | `pathId` | Path ID of the target asset object. |
+| 4 | int32 | `classId` | Unity class ID. |
+| 2 | uint16 | `monoScriptIndex` | MonoScript index, or `0xFFFF` if not a MonoBehaviour. |
+| 4 + n | int32 + entries | preload dependencies | Count followed by `(int32 fileId, int64 pathId)` pairs. |
+
+For `replacerType = 2` (replace/add), additional optional fields follow:
+
+| Size | Type | Field | Description |
+|------|------|-------|-------------|
+| 1 | byte | `flag1` | Always `0` in observed files. If non-zero, UABEA throws `NotSupportedException` (the purpose of this flag is unknown). |
+| 1 | byte | `flag2` | Non-zero if a `propertiesHash` (16 bytes) follows. |
+| 1 | byte | `flag3` | Non-zero if a `scriptHash` (16 bytes) follows. |
+| 1 | byte | `flag4` | Non-zero if a `ClassDatabaseFile` follows. |
+| 8 | int64 | data length | Byte length of the replacement asset data. |
+| n | bytes | asset data | Raw serialized bytes for the replacement object. |
+
+For `replacerType = 0` (remove / `AssetsRemover`), no additional data follows beyond the preload dependencies.
+
+## Reading and writing
+
+UABEA exposes the format through `InstallerPackageFile` in `UABEAvalonia/Logic/Emip.cs`. The `Read` method accepts an optional `prefReplacersInMemory` flag:
+
+- `true` — asset data is loaded into a byte array (`AssetsReplacerFromMemory`). Suitable when the EMIP file will be closed after reading.
+- `false` (default) — asset data is read lazily from the stream (`AssetsReplacerFromStream`). The stream must remain open while replacers are active.
+
+The `Write` method serialises the full structure back to any `AssetsFileWriter`.

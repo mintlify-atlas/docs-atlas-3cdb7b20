@@ -1,0 +1,136 @@
+---
+title: "Importing and exporting assets"
+description: "Export assets as raw binary or text dumps, import modified data back, run batch operations, and understand the text dump format."
+---
+
+UABEA provides four core data transfer operations: **Export Raw**, **Export Dump**, **Import Raw**, and **Import Dump**. All four are available from the buttons at the bottom of the InfoWindow and work on single or multiple selected assets.
+
+## Export Raw
+
+Exports the raw binary data of the selected asset exactly as it is stored in the serialized file. No parsing or conversion is applied.
+
+Use raw export when:
+- You want to feed the binary data to an external tool.
+- You are replacing an asset with identically-structured binary data from another file.
+- The asset type is not fully parsed by UABEA and you need the bytes for manual inspection.
+
+The exported file has no specific extension by default. You can name it anything.
+
+## Export Dump
+
+Exports a human-readable **text dump** of the asset's field tree. This is the most useful format for making targeted edits — you can read and modify individual field values in any text editor, then import the result back.
+
+<Tip>
+  Export Dump also has a **JSON** variant. Use the JSON dump when you need to process asset data programmatically.
+</Tip>
+
+## Import Raw
+
+Replaces the binary data of the selected asset with the contents of a file you choose. The file is imported verbatim — UABEA does not validate the structure.
+
+<Warning>
+  Importing raw data that does not match the asset's expected binary layout will corrupt the asset and may crash the game.
+</Warning>
+
+## Import Dump
+
+Parses a previously exported text dump (or one you have written manually) and writes the resulting binary data back into the asset. UABEA re-serializes the dump into the correct binary format.
+
+If the dump contains a syntax error, UABEA shows a **Compile Error** dialog with the exception message and cancels the import. No changes are written.
+
+## Batch operations
+
+Select multiple assets in the InfoWindow (using **Ctrl+Click** or **Shift+Click**) before clicking any export or import button. UABEA automatically switches to batch mode:
+
+- **Batch Export Raw / Batch Export Dump** — prompts for a directory and writes one file per selected asset, using the asset name and path ID in the filename.
+- **Batch Import Raw / Batch Import Dump** — prompts for a directory and matches files in that directory to the selected assets by name.
+
+<Note>
+  For batch import, UABEA matches files by their filename pattern. Filenames must match the pattern produced by batch export to be recognized.
+</Note>
+
+## The text dump format
+
+Understanding the dump format lets you edit dumps reliably and write new ones from scratch.
+
+Each line in a text dump represents one field in the asset's serialization tree. The format of a single line is:
+
+```
+<indent><align> <type> <name> = <value>
+```
+
+| Part | Description |
+|------|-------------|
+| `<indent>` | Spaces (one per nesting level) indicating the field's depth in the tree. |
+| `<align>` | `1` if the field requires 4-byte alignment after it is written; `0` otherwise. Strings always use `1`. |
+| `<type>` | The C++ type name used by Unity internally, for example `int`, `float`, `string`, `bool`, `UInt64`. |
+| `<name>` | The field name as it appears in Unity's type tree, for example `m_Name`, `m_Width`. |
+| `= <value>` | The field's value. Present for leaf fields; absent for object/struct fields that contain children. |
+
+### Example dump
+
+```text
+0 GameObject Base
+ 0 int m_InstanceID = 12345
+ 1 string m_Name = "Player"
+ 0 bool m_IsActive = True
+ 0 vector m_Component (2 items)
+  0 int size = 2
+  [0]
+   0 ComponentPair data
+    0 PPtr<Component> component
+     0 int m_FileID = 0
+     0 SInt64 m_PathID = 67
+  [1]
+   0 ComponentPair data
+    0 PPtr<Component> component
+     0 int m_FileID = 0
+     0 SInt64 m_PathID = 68
+```
+
+Key points:
+- Lines beginning with `[N]` are array index markers and are **ignored** on import — do not change them.
+- String values are enclosed in double quotes: `= "value"`. Backslash and quote characters inside strings are escaped.
+- Array lines include an item count in parentheses, for example `(2 items)`. **Do not change the count by hand** — it is derived from the actual child count on import.
+- The `size` field inside arrays reflects the count and **must stay consistent** with the number of `[N]` blocks.
+
+### Alignment flag
+
+The alignment flag (`0` or `1`) controls whether a 4-byte padding boundary is inserted after the field's data when writing binary output. This must match Unity's expectation for the type. When round-tripping a dump (export then import), never change the alignment flag — it is fixed by the type definition.
+
+## JSON dump format
+
+The JSON dump represents the same structure as a nested JSON object, using the field names as keys and the values directly as JSON values. Arrays become JSON arrays.
+
+```json
+{
+  "m_Name": "Player",
+  "m_IsActive": true,
+  "m_Component": [
+    {
+      "component": { "m_FileID": 0, "m_PathID": 67 }
+    }
+  ]
+}
+```
+
+JSON dumps are easier to parse programmatically but lack the alignment metadata needed to reconstruct binary data without a type template. Use text dumps when manually editing assets in a text editor; use JSON dumps when scripting batch modifications with external tools.
+
+<Accordion title="Supported type names in text dumps">
+  The following type names are recognized by the text dump importer:
+
+  | Type name | C# equivalent |
+  |-----------|--------------|
+  | `int` / `SInt32` | `int` (32-bit signed) |
+  | `unsigned int` / `UInt32` | `uint` (32-bit unsigned) |
+  | `SInt64` / `long` | `long` (64-bit signed) |
+  | `UInt64` / `unsigned long long` / `FileSize` | `ulong` (64-bit unsigned) |
+  | `SInt8` / `char` | `sbyte` |
+  | `UInt8` / `unsigned char` | `byte` |
+  | `SInt16` / `short` | `short` |
+  | `UInt16` / `unsigned short` | `ushort` |
+  | `float` | `float` |
+  | `double` | `double` |
+  | `bool` | `bool` |
+  | `string` | UTF-8 string with 32-bit length prefix |
+</Accordion>

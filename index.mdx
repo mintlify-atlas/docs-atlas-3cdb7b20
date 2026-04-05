@@ -1,97 +1,71 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "UABEA — Unity Asset Bundle Extractor Avalonia"
+description: "A cross-platform editor for Unity asset bundles and serialized files. View, edit, import, and export game assets for modding and research."
 ---
 
-## Setting up
+UABEA (Unity Asset Bundle Extractor Avalonia) is a cross-platform tool for reading and writing Unity asset bundles and serialized files. Originally inspired by the classic UABE tool, UABEA is built from the ground up for modern Unity versions and runs on Windows, Linux, and macOS.
 
-Get your documentation site up and running in minutes.
+<Note>
+  UABEA is primarily a **modding and research tool**. If you only need to extract assets for viewing, consider [AssetRipper](https://github.com/AssetRipper/AssetRipper) or [AssetStudio](https://github.com/Perfare/AssetStudio/) instead.
+</Note>
 
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
-
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/installation">
+    Download and install UABEA on Windows, Linux, or macOS
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="Quick Start" icon="rocket" href="/quickstart">
+    Open your first asset bundle and explore its contents
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+  <Card title="Editing Assets" icon="pen-to-square" href="/guides/viewing-editing-assets">
+    View, modify, import, and export individual assets
   </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
+  <Card title="Mod Packaging" icon="box-archive" href="/guides/emip-format">
+    Bundle your changes into distributable EMIP mod packages
   </Card>
-</Columns>
+  <Card title="Plugins" icon="puzzle-piece" href="/plugins/overview">
+    Use built-in plugins for textures, audio, fonts, and more
+  </Card>
+  <Card title="CLI Reference" icon="terminal" href="/cli/command-reference">
+    Automate batch operations from the command line
+  </Card>
+</CardGroup>
 
-## Create beautiful pages
+## What UABEA can do
 
-Everything you need to create world-class documentation.
+<CardGroup cols={2}>
+  <Card title="Asset bundle support" icon="layer-group">
+    Open, decompress, inspect, and repack Unity asset bundle files (`.bundle`, `.ab`, `.unity3d`)
+  </Card>
+  <Card title="Serialized file editing" icon="file-pen">
+    Browse and edit serialized `.assets` files directly, including all asset types within
+  </Card>
+  <Card title="Import and export" icon="arrows-left-right">
+    Export assets as raw binary, JSON dump, or plugin-specific formats; import changes back
+  </Card>
+  <Card title="Mod packaging" icon="gift">
+    Create and apply EMIP mod packages to distribute game modifications
+  </Card>
+  <Card title="Plugin system" icon="plug">
+    Extend UABEA with plugins for textures, audio clips, fonts, text assets, and custom types
+  </Card>
+  <Card title="Hierarchy viewer" icon="sitemap">
+    Browse the GameObject scene hierarchy to navigate complex asset structures
+  </Card>
+</CardGroup>
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+## Get started
 
-## Need inspiration?
-
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+<Steps>
+  <Step title="Download UABEA">
+    Grab the latest nightly build for [Windows](https://nightly.link/nesrak1/UABEA/workflows/dotnet-desktop/master/uabea-windows.zip) or [Linux](https://nightly.link/nesrak1/UABEA/workflows/dotnet-ubuntu/master/uabea-ubuntu.zip), or download a stable release from the [GitHub Releases page](https://github.com/nesrak1/UABEA/releases).
+  </Step>
+  <Step title="Open a file">
+    Launch UABEA, then use **File → Open** to load an asset bundle or serialized assets file from your game directory.
+  </Step>
+  <Step title="Browse and edit assets">
+    Select assets in the list, click **View Data** to inspect fields, or use **Export Dump** / **Import Dump** to edit via JSON.
+  </Step>
+  <Step title="Save your changes">
+    Use **File → Save** or **File → Save As** to write your changes back to disk. Create an EMIP package to share your mod.
+  </Step>
+</Steps>

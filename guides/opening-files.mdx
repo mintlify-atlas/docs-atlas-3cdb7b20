@@ -1,0 +1,85 @@
+---
+title: "Opening files"
+description: "How to open asset bundles and serialized assets files in UABEA, understand automatic file detection, and manage multiple open files."
+---
+
+UABEA can open two kinds of Unity files: **asset bundles** (`.bundle`, `.assetbundle`, or any extension) and **serialized assets files** (commonly named `sharedassets0.assets`, `level0`, `resources.assets`, etc.). You do not need to specify the type — UABEA detects it automatically.
+
+## File detection
+
+When you open a file, UABEA inspects the first few bytes to determine the type:
+
+- Files whose header begins with `UnityFS` are treated as **bundle files**.
+- Files that match Unity's serialized-file format (a valid format version and version string) are treated as **assets files**.
+- Anything else is reported as unknown and rejected.
+
+This means you can open files regardless of their extension, including files with no extension at all.
+
+## Opening a file
+
+<Steps>
+  <Step title="Launch UABEA">
+    Start UABEA. The main window shows an empty bundle viewer.
+  </Step>
+  <Step title="Open via menu or drag-and-drop">
+    Go to **File → Open** and select one or more files, or drag and drop files directly onto the main window.
+
+    <Tip>
+      You can select an entire `_Data` folder's worth of assets files at once. UABEA silently skips any file it cannot parse, so false positives from non-assets files in the folder won't produce error dialogs.
+    </Tip>
+  </Step>
+  <Step title="Wait for detection and loading">
+    UABEA detects the file type and opens the appropriate interface:
+
+    - **Bundle file** → the bundle viewer (main window) lists the serialized files packed inside.
+    - **Assets file** → the InfoWindow opens immediately, showing the asset list.
+  </Step>
+</Steps>
+
+## Opening a bundle vs. an assets file
+
+<Tabs>
+  <Tab title="Bundle file">
+    When you open a bundle file, the **main window** displays a dropdown listing every serialized file contained in the bundle. From here you can:
+
+    - Select a file in the dropdown and click **Info** to open its asset list in an InfoWindow.
+    - Click **Export** to extract a single serialized file to disk.
+    - Click **Export All** to extract all contained files to a folder.
+    - Click **Import** / **Import All** to replace serialized files inside the bundle before saving.
+
+    <Note>
+      Opening a non-serialized entry (such as a raw shader or texture blob stored directly in the bundle) via **Info** will show an error. Use **Export** instead to save those files.
+    </Note>
+  </Tab>
+  <Tab title="Assets file">
+    When you open a serialized assets file directly (not from inside a bundle), UABEA skips the bundle viewer and takes you straight to the **InfoWindow** — the asset list for that file.
+
+    You can open multiple assets files at the same time by selecting them all in the file picker. UABEA loads all of them into a single InfoWindow so cross-file references resolve correctly.
+
+    <Warning>
+      Only one InfoWindow can be open per UABEA instance. If you need to compare files from two different games simultaneously, open a second UABEA window.
+    </Warning>
+  </Tab>
+</Tabs>
+
+## Compressed bundles and .decomp files
+
+Many bundles are compressed with **LZ4** or **LZMA**. UABEA decompresses them automatically before loading.
+
+Because the decompressed data can be large, UABEA writes it to a temporary file on disk next to the original bundle, using the suffix `.decomp`. For example, opening `myassets.bundle` may create `myassets.bundle.decomp`.
+
+<Note>
+  The `.decomp` file is a working copy. UABEA reads from it while the bundle is open. Do not delete it while the file is in use.
+</Note>
+
+`.decomp` files are not automatically deleted when you close UABEA. You can safely remove them manually after you are done working with the bundle; they will be recreated the next time you open the same bundle.
+
+## Navigating between open files
+
+When multiple assets files are open in one InfoWindow, you can switch between them using the **file selector** at the top of the InfoWindow. The asset list updates to show assets from the selected file.
+
+For bundles, the **dropdown** in the main window lets you switch between the serialized files packed in that bundle. Click **Info** after selecting a different entry to open it in a new InfoWindow.
+
+<Tip>
+  Use **Search → Go To Asset** (or the menu equivalent) to jump directly to an asset by its file ID and path ID, which is useful when following cross-file references.
+</Tip>

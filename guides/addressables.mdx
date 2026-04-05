@@ -1,0 +1,115 @@
+---
+title: "Addressables"
+description: "Edit Unity Addressables bundles by patching CRC checks in the catalog before opening modified bundles in UABEA."
+---
+
+## What are addressables?
+
+**Unity Addressables** is a content management system built on top of asset bundles. Instead of referencing assets directly by path, the game resolves assets through a **catalog** — a JSON file that maps logical addresses to physical bundle files along with metadata including expected file sizes and CRC checksums.
+
+You can identify an addressables bundle by its path. Bundles managed by addressables typically follow the pattern:
+
+```
+StreamingAssets/aa/<platform>/something.bundle
+```
+
+For example:
+```
+StreamingAssets/aa/Android/characters_assets_all.bundle
+StreamingAssets/aa/StandaloneWindows64/ui_atlas.bundle
+```
+
+The catalog files are usually located at:
+```
+StreamingAssets/aa/catalog.json
+StreamingAssets/aa/catalog.hash
+```
+
+## Why CRC checks matter
+
+When the game loads an addressables bundle, it verifies the bundle's CRC checksum against the value stored in the catalog. If the checksums do not match — as they will after you modify a bundle in UABEA — the game **refuses to load** the modified bundle and falls back to the original or shows an error.
+
+To make the game accept your modified bundle, you must update the catalog's stored CRC to match the new bundle's actual checksum. The easiest way to do this is with **AddressablesTools**.
+
+## Patching the catalog with AddressablesTools
+
+<Steps>
+  <Step title="Download AddressablesTools">
+    Download the latest release from the [AddressablesTools releases page](https://github.com/nesrak1/AddressablesTools/releases). Extract the archive to a convenient location.
+  </Step>
+  <Step title="Locate your catalog.json">
+    Find the catalog file in the game's data directory, typically at:
+
+    ```
+    <game_folder>/StreamingAssets/aa/catalog.json
+    ```
+  </Step>
+  <Step title="Run the patchcrc command">
+    Open a terminal in the AddressablesTools directory and run:
+
+    ```bash
+    Example patchcrc catalog.json
+    ```
+
+    Replace `catalog.json` with the full path if you are not running from the same directory.
+
+    The tool reads the catalog, recalculates the CRC for every bundle it references on disk, and writes the updated catalog to a new file named `catalog.json.patched`.
+  </Step>
+  <Step title="Replace the original catalog">
+    Back up the original `catalog.json`, then rename or move `catalog.json.patched` to `catalog.json`:
+
+    ```bash
+    # Back up original
+    mv catalog.json catalog.json.original
+
+    # Replace with patched version
+    mv catalog.json.patched catalog.json
+    ```
+
+    On Windows, rename the files in Explorer or using `ren` in Command Prompt.
+  </Step>
+  <Step title="Verify">
+    Launch the game and confirm the modified content loads correctly.
+  </Step>
+</Steps>
+
+<Warning>
+  Run `patchcrc` **after** you have finished editing and saving all your bundles in UABEA. Every time you save a modified bundle, the CRC changes. If you patch the catalog and then modify another bundle, you need to run `patchcrc` again.
+</Warning>
+
+## Editing addressables bundles in UABEA
+
+Addressables bundles are standard Unity asset bundles — once the catalog is patched, you edit them in UABEA exactly like any other bundle.
+
+<Steps>
+  <Step title="Open the bundle">
+    Go to **File → Open** and select the `.bundle` file from the `StreamingAssets/aa/` directory.
+  </Step>
+  <Step title="Edit assets">
+    Click **Info** on the serialized file inside the bundle, then edit assets as needed using the InfoWindow.
+  </Step>
+  <Step title="Save the bundle">
+    Use **File → Save** to overwrite the original bundle file.
+  </Step>
+  <Step title="Patch the catalog">
+    Run `patchcrc` on the catalog as described above to update the CRC for your modified bundle.
+  </Step>
+</Steps>
+
+## Frequently asked questions
+
+<Accordion title="Does patching the catalog affect assets I didn't modify?">
+  No. `patchcrc` only updates the CRC values for bundles whose content has actually changed. Bundles you did not modify keep their original CRC values and continue to load normally.
+</Accordion>
+
+<Accordion title="The game has both a catalog.json and a catalog.hash — do I need to update the hash file too?">
+  The `.hash` file stores a quick content hash used to decide whether to download an updated catalog (relevant for remote catalogs). For local, offline mods you generally do not need to update it. If the game checks the hash and rejects the catalog, delete the `.hash` file — most games will regenerate or ignore it when it is absent.
+</Accordion>
+
+<Accordion title="My game uses a remote catalog downloaded from a server. Can I still patch it?">
+  You need to intercept and replace the downloaded catalog, or configure the game to use a local catalog. This is game-specific and outside the scope of UABEA itself.
+</Accordion>
+
+<Accordion title="AddressablesTools says it cannot find the bundle files.">
+  Make sure you run `patchcrc` from the directory that contains `catalog.json`, or provide the full path to the catalog. AddressablesTools resolves bundle paths relative to the catalog's location.
+</Accordion>

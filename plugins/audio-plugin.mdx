@@ -1,0 +1,58 @@
+---
+title: "AudioClip plugin"
+description: "Export AudioClip assets to audio files using the built-in UABEA audio plugin."
+---
+
+The AudioClip plugin handles `AudioClip` assets. It reads FMOD sound bank data and reconstructs it as a standard audio file that can be played or edited with any audio tool.
+
+## Actions
+
+| Action | Menu label | Works on |
+|---|---|---|
+| Export | "Export audio file" | Single or multiple assets |
+
+Import is not supported — the plugin is export-only.
+
+### Export
+
+- **Single export** — detects the compression format of the clip, prompts for a save location, and writes the decoded audio data. The suggested filename is `<name>-<filename>-<pathId>`.
+- **Batch export** — prompts for an output directory and exports all selected clips in one pass.
+
+## Supported compression formats
+
+Unity stores `AudioClip` data in FMOD Sound Bank (FSB5) files. The plugin reads the `m_CompressionFormat` field to determine the output file extension:
+
+| Unity compression format | Output extension |
+|---|---|
+| PCM | `.wav` |
+| Vorbis | `.ogg` |
+| ADPCM | `.wav` |
+| MP3 | `.mp3` |
+| AAC | `.aac` |
+| GCADPCM (Nintendo ADPCM) | `.wav` |
+| VAG, HEVAG, XMA, ATRAC9 | `.dat` (proprietary, not directly playable) |
+
+<Warning>
+  Proprietary formats (VAG, HEVAG, XMA, ATRAC9) are exported as raw `.dat` files. These formats are platform-specific and require dedicated tools to decode.
+</Warning>
+
+## Audio data location
+
+Unity can store audio data either inline in the asset file or in an external `.resource` file. The plugin checks both locations:
+
+1. If the asset is inside a bundle, it looks for the resource file inside the bundle's block data.
+2. It then checks for the resource file on disk relative to the assets file.
+3. As a fallback, it checks the current directory using only the filename component of the resource path.
+
+## Backend library
+
+The plugin depends on **Fmod5Sharp**, a managed .NET library for reading FSB5 sound bank files. Fmod5Sharp is responsible for:
+
+- Parsing the FSB5 container format.
+- Rebuilding each sample into its standard file format (e.g., WAV headers for PCM data).
+
+<Note>
+  The plugin includes a WAV header correction step because Fmod5Sharp produces a non-standard `fmt` sub-chunk. The fix removes the extra `ExtraParamSize` field and recalculates all chunk sizes to produce a valid PCM WAV file.
+</Note>
+
+Only the first sample in each FMOD sound bank is exported. Most Unity AudioClip assets contain a single sample per bank.

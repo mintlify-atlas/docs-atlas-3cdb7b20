@@ -1,0 +1,79 @@
+---
+title: "Texture plugin"
+description: "Export, import, and edit Texture2D assets using the built-in UABEA texture plugin."
+---
+
+The texture plugin handles `Texture2D` assets. It ships with UABEA and its DLL is automatically placed in the `plugins/` directory when building the solution.
+
+## Actions
+
+Selecting one or more `Texture2D` assets and clicking **Plugin** exposes the following actions:
+
+| Action | Menu label | Works on |
+|---|---|---|
+| Export | "Export texture" / "Batch export textures" | Single or multiple assets |
+| Import | "Batch import textures" | Multiple assets only |
+| Edit | "Edit texture" | Single asset only |
+
+### Export
+
+Exports the raw compressed texture data, decodes it, and saves the result as an image file.
+
+- **Single export** — prompts for a save location and lets you choose PNG or TGA format.
+- **Batch export** — prompts for an output format first, then for a destination folder. Each texture is saved as `<name>-<filename>-<pathId>.<ext>`.
+
+Textures that have a `0×0` size (for example, font atlas placeholders) are skipped automatically.
+
+<Note>
+  If the texture data is stored in a `.resS` streaming file, that file must be present alongside the asset bundle for export to succeed.
+</Note>
+
+### Import
+
+Batch import only — a single-asset import path is not exposed in the menu. You select a source folder and UABEA presents a matching dialog that lets you associate each image file with a specific asset.
+
+Accepted image formats: **PNG**, **TGA**.
+
+The plugin preserves the original texture format (`m_TextureFormat`) and recalculates mipmaps when the imported image dimensions are a power of two and the original had multiple mip levels.
+
+### Edit
+
+Opens a dialog for the selected `Texture2D` asset where you can change its settings (name, format, mip count, and stream data references) without replacing the pixel data. Only available when exactly one asset is selected.
+
+## Supported texture formats
+
+The plugin handles decoding and encoding through a layered backend:
+
+- **AssetsRipper TextureDecoder** — managed fallback for many uncompressed and block-compressed formats.
+- **PVRTexLib** — PVRTC (2bpp and 4bpp RGB/RGBA) and additional formats.
+- **ISPC Texture Compressor** — fast encoding for DXT (BC1/BC3), BC6H, BC7, and ETC formats.
+- **Unity crnlib** — Crunch-compressed DXT1 and DXT5 textures.
+
+Formats with decoding support include:
+
+| Family | Formats |
+|---|---|
+| Uncompressed | RGBA32, ARGB32, BGRA32, RGB24, RGB565, ARGB4444, RGBA4444, Alpha8, R8, R16, RG16 |
+| Float/HDR | RHalf, RGHalf, RGBAHalf, RFloat, RGFloat, RGBAFloat, RGB9e5Float |
+| DXT / BCn | DXT1, DXT5, BC4, BC5, BC6H, BC7 |
+| ETC / EAC | ETC_RGB4, ETC2_RGB4, ETC2_RGBA1, ETC2_RGBA8, EAC_R, EAC_R_SIGNED, EAC_RG, EAC_RG_SIGNED |
+| ASTC | ASTC_RGB/RGBA 4×4, 5×5, 6×6, 8×8, 10×10, 12×12 |
+| PVRTC | PVRTC_RGB2, PVRTC_RGBA2, PVRTC_RGB4, PVRTC_RGBA4 |
+| Misc | YUY2 |
+
+<Note>
+  Nintendo Switch textures use a swizzled memory layout. The plugin includes a deswizzler (`Texture2DSwitchDeswizzler`) that handles Switch-specific platform blobs automatically.
+</Note>
+
+## Native dependencies
+
+The native compression and decompression libraries are copied into `runtimes/<rid>/native/` alongside the UABEA executable at build time:
+
+| Library | Purpose |
+|---|---|
+| `TexToolWrap` | C++ wrapper that bridges managed code to the native libraries |
+| `PVRTexLib` | PVRTC decode/encode |
+| `ispc_texcomp` | BCn and ETC encode via ISPC |
+| `crnlib` | Crunch-compressed DXT decode |
+
+These libraries are required for encoding compressed formats when importing textures.

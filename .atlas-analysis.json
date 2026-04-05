@@ -1,0 +1,86 @@
+{
+  "projectType": "general",
+  "projectName": "UABEA",
+  "projectDescription": "A cross-platform Unity Asset Bundle and serialized file editor for reading, writing, and modding assets in newer versions of Unity games.",
+  "theme": "palm",
+  "primaryColor": "#420642",
+  "lightColor": "#ac74ac",
+  "darkColor": "#daced9",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "installation",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Using UABEA",
+            "pages": [
+              "guides/opening-files",
+              "guides/viewing-editing-assets",
+              "guides/importing-exporting",
+              "guides/asset-bundles",
+              "guides/addressables"
+            ]
+          },
+          {
+            "group": "Mod Packaging",
+            "pages": [
+              "guides/emip-format",
+              "guides/creating-mod-packages",
+              "guides/applying-mods"
+            ]
+          },
+          {
+            "group": "Plugins",
+            "pages": [
+              "plugins/overview",
+              "plugins/texture-plugin",
+              "plugins/audio-plugin",
+              "plugins/font-plugin",
+              "plugins/text-asset-plugin",
+              "plugins/writing-plugins"
+            ]
+          },
+          {
+            "group": "CLI & Configuration",
+            "pages": [
+              "cli/command-reference",
+              "configuration"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Cross-platform GUI for Unity asset bundle and serialized file editing (Windows, Linux, macOS)",
+    "View, edit, import, and export Unity assets of many types (textures, audio, fonts, text, raw data)",
+    "Support for both asset bundle files and serialized (assets) files",
+    "Bundle decompression and recompression (LZ4, LZMA)",
+    "Mod packaging via EMIP (Easy Mod Installer Package) format",
+    "Plugin system for extensible asset type support",
+    "GameObject hierarchy viewer",
+    "Batch export/import for asset bundles via CLI",
+    "Addressables support with CRC patch guidance",
+    "Dark theme and configurable settings"
+  ],
+  "publicApiSurface": [
+    "UABEAPlugin interface (Init() -> PluginInfo)",
+    "UABEAPluginOption interface (SelectionValidForPlugin, ExecutePlugin)",
+    "CommandLineHandler: batchexportbundle <directory>",
+    "CommandLineHandler: batchimportbundle <directory>",
+    "CommandLineHandler: applyemip <emip file> <directory>",
+    "CLI flags: -keepnames, -kd, -fd, -md",
+    "InstallerPackageFile (EMIP read/write)",
+    "AssetImportExport: DumpRawAsset, DumpTextAsset, ImportTextDump",
+    "AssetBundleUtil: IsBundleDataCompressed",
+    "ConfigurationSettings: UseDarkTheme, UseCpp2Il"
+  ]
+}

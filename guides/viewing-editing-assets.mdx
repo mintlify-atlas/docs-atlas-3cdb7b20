@@ -1,0 +1,108 @@
+---
+title: "Viewing and editing assets"
+description: "Browse the asset list, filter and search assets, view field data in the DataWindow, and edit, rename, remove, or add assets."
+---
+
+Once a serialized assets file is open, the **InfoWindow** is your main workspace. It lists every asset in the file as a row in a data grid and provides buttons for all viewing and editing operations.
+
+## The asset list
+
+The data grid in the InfoWindow has the following columns:
+
+| Column | Description |
+|--------|-------------|
+| **Name** | The display name of the asset (derived from internal name fields such as `m_Name`). Unnamed assets show as `Unnamed asset`. |
+| **Type** | The Unity asset type, for example `Texture2D`, `AudioClip`, `MonoBehaviour`. |
+| **Path ID** | The unique 64-bit integer identifier for this asset within the file. |
+| **Size** | The serialized byte size of the asset data. |
+
+Click a column header to sort by that column. Hold **Ctrl** and click to multi-select rows for batch operations.
+
+## Filtering by type
+
+Go to **View → Filter** to open the filter dialog. It lists every asset type present in the file. Uncheck a type to hide all assets of that type from the list. The filter is applied instantly and can be toggled at any time.
+
+## Searching by name
+
+<Steps>
+  <Step title="Open the search dialog">
+    Go to **Search → Search by Name**. A dialog appears with a text box and options for direction (up/down) and case sensitivity.
+  </Step>
+  <Step title="Enter the search term">
+    Type part of the asset name and click **OK**. UABEA selects the first matching asset and scrolls to it.
+  </Step>
+  <Step title="Continue searching">
+    Press **F3** or go to **Search → Continue Search** to jump to the next match.
+  </Step>
+</Steps>
+
+## Go To Asset by path ID
+
+Use **Search → Go To Asset** to navigate directly to an asset using a file index and path ID. This is useful when you have a reference (PPtr) pointing to a specific asset and you want to inspect it.
+
+## Viewing asset data
+
+Select an asset and click **View Data** to open the **DataWindow**. This window displays the asset's complete field tree — all fields and their current values, laid out as a tree reflecting the Unity serialization structure.
+
+The DataWindow is read-only. It is useful for inspecting values without the risk of accidentally changing something.
+
+<Note>
+  For very large assets, UABEA shows a warning before loading the DataWindow. Large assets (such as mesh data with many vertices) can take a moment to parse.
+</Note>
+
+## Editing asset data
+
+Select an asset and click **Edit Data** to open the **EditDataWindow** — an inline text editor pre-populated with the asset's text dump. The editor has syntax highlighting for the dump format.
+
+<Steps>
+  <Step title="Open Edit Data">
+    Select an asset in the list and click **Edit Data**.
+  </Step>
+  <Step title="Modify field values">
+    The text editor shows the full field tree in text dump format. Edit the value after the `=` sign on any leaf field. Structural lines (arrays, nested objects) should not be added or removed — only values should change.
+  </Step>
+  <Step title="Apply changes">
+    Click **OK**. UABEA re-parses the dump and writes the new binary data into the workspace. The change is held in memory until you save the file.
+  </Step>
+</Steps>
+
+<Warning>
+  Editing array sizes or field structure in the Edit Data window will cause import errors. Only edit the values of leaf fields.
+</Warning>
+
+## Renaming an asset
+
+Right-click an asset in the list and choose **Rename**, or use the corresponding menu option. Type the new name in the dialog that appears and confirm. This changes the `m_Name` field stored inside the asset's data.
+
+## Removing an asset
+
+Select one or more assets and click **Remove**. UABEA asks for confirmation before proceeding because removing an asset that is referenced by other assets can cause crashes or missing content in the game.
+
+<Warning>
+  There is no undo for asset removal within a session. Verify your selection carefully before confirming.
+</Warning>
+
+## Adding a new asset
+
+Go to **File → Add** (or the Add menu item) to open the **Add Asset** dialog. Choose the asset class type, then provide the initial data (either as raw bytes or a text dump). The new asset is assigned the next available path ID.
+
+## Scene hierarchy view
+
+The **Scene View** (also accessible as the **Hierarchy** window) shows assets organized as a GameObject tree rather than a flat list.
+
+<Steps>
+  <Step title="Open the hierarchy">
+    Click **Scene View** in the toolbar, or go to **View → Hierarchy**. The GameObjectViewWindow opens alongside the InfoWindow.
+  </Step>
+  <Step title="Browse the tree">
+    The left panel shows the GameObject hierarchy. Expand nodes to see child GameObjects.
+  </Step>
+  <Step title="Inspect components">
+    Select a GameObject in the tree to see its attached components listed in the right panel as a field tree.
+  </Step>
+  <Step title="Jump to an asset in the list">
+    Double-click a GameObject in the hierarchy to select and scroll to its corresponding asset in the InfoWindow asset list.
+  </Step>
+</Steps>
+
+You can also open the hierarchy for a specific GameObject by selecting it in the asset list and clicking **Scene View**. UABEA automatically focuses the hierarchy on that object. Components that have a `m_GameObject` reference also navigate to their parent object's hierarchy entry.

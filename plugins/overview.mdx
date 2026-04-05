@@ -1,0 +1,58 @@
+---
+title: "Plugins overview"
+description: "How UABEA's plugin system works, which plugins ship by default, and how to extend UABEA with custom plugins."
+---
+
+Plugins extend UABEA with asset-type-specific actions such as exporting textures to image files, importing fonts, or extracting audio. Each plugin is a .NET class library compiled as a `.dll` and placed in a `plugins/` directory next to the UABEA executable.
+
+## How plugins are loaded
+
+At startup, `PluginManager` scans the `plugins/` subdirectory next to the executable and loads every `.dll` it finds:
+
+```csharp
+public void LoadPluginsInDirectory(string directory)
+{
+    Directory.CreateDirectory(directory);
+    foreach (string file in Directory.EnumerateFiles(directory, "*.dll"))
+    {
+        LoadPlugin(file);
+    }
+}
+```
+
+Each DLL is inspected via reflection. If a class that implements the `UABEAPlugin` interface is found, its `Init()` method is called to retrieve the plugin's name and the list of options it provides.
+
+## How plugins appear in the UI
+
+After selecting one or more assets in the InfoWindow, click the **Plugin** button. UABEA queries every loaded plugin option with `SelectionValidForPlugin` to determine which actions apply to the current selection. Only valid actions are shown in the list. Selecting an entry calls the corresponding `ExecutePlugin` method.
+
+<Note>
+  The Plugin button is only active when at least one asset is selected. If no plugins are compatible with the selected assets, the list will be empty.
+</Note>
+
+## Built-in plugins
+
+UABEA ships with four plugins that cover the most common asset types:
+
+<CardGroup cols={2}>
+  <Card title="Texture plugin" icon="image" href="/plugins/texture-plugin">
+    Export and import Texture2D assets as PNG or TGA images, and edit texture settings.
+  </Card>
+  <Card title="AudioClip plugin" icon="volume-high" href="/plugins/audio-plugin">
+    Export AudioClip assets to WAV, OGG, MP3, and other audio formats.
+  </Card>
+  <Card title="Font plugin" icon="font" href="/plugins/font-plugin">
+    Import and export TrueType and OpenType font files embedded in Font assets.
+  </Card>
+  <Card title="TextAsset plugin" icon="file-lines" href="/plugins/text-asset-plugin">
+    Import and export the raw byte content of TextAsset assets as text or binary files.
+  </Card>
+</CardGroup>
+
+## Writing your own plugin
+
+You can add support for any asset type by implementing the `UABEAPlugin` and `UABEAPluginOption` interfaces and placing the compiled DLL in the `plugins/` directory.
+
+<Card title="Writing plugins" icon="code" href="/plugins/writing-plugins">
+  Step-by-step guide to creating a custom UABEA plugin.
+</Card>

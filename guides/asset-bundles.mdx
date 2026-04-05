@@ -1,0 +1,130 @@
+---
+title: "Working with asset bundles"
+description: "Understand Unity asset bundles, open and inspect their contents, extract and replace serialized files, and repack modified bundles."
+---
+
+## What are asset bundles?
+
+An **asset bundle** is a Unity-specific archive format that packages one or more serialized assets files (and sometimes raw binary blobs) into a single file for efficient distribution and loading at runtime. Games use them to ship DLC, manage memory by streaming content on demand, or group related assets together.
+
+Asset bundle files typically use the extensions `.bundle` or `.assetbundle`, but Unity imposes no extension requirement — many games ship bundles with no extension or game-specific extensions.
+
+Internally, a bundle file begins with a `UnityFS` magic header and contains:
+- A block table describing the compressed data regions.
+- A directory listing the files packed inside.
+- The actual file data, optionally compressed per block.
+
+## Opening a bundle
+
+<Steps>
+  <Step title="Open the file">
+    Go to **File → Open** and select the bundle file, or drag it onto the main UABEA window. UABEA detects the `UnityFS` header and opens the bundle viewer.
+  </Step>
+  <Step title="View contained files">
+    The main window's dropdown lists every entry in the bundle. Serialized assets files are flagged as serialized; raw blobs are not.
+  </Step>
+  <Step title="Open an assets file">
+    Select an entry in the dropdown and click **Info** to open that file's asset list in an InfoWindow.
+  </Step>
+</Steps>
+
+## Bundle compression
+
+Unity bundles support two compression formats:
+
+<CardGroup cols={2}>
+  <Card title="LZ4" icon="bolt">
+    Block-level compression. Faster to decompress than LZMA, supports random access into the bundle data. Most modern Unity games use LZ4.
+  </Card>
+  <Card title="LZMA" icon="file-zipper">
+    Stream-level compression. Produces smaller files but requires decompressing the entire stream before any data can be read. Older Unity projects and some specific pipelines use LZMA.
+  </Card>
+</CardGroup>
+
+UABEA detects compression automatically by inspecting each block's compression type flags. If any block is compressed, UABEA decompresses the entire bundle before loading.
+
+## .decomp files
+
+When UABEA decompresses a bundle, it writes the decompressed data to a temporary file next to the original. The temp file uses the original filename with `.decomp` appended:
+
+```
+levels/level_01.bundle        ← original (compressed)
+levels/level_01.bundle.decomp ← decompressed working copy
+```
+
+UABEA reads from the `.decomp` file while the bundle is open. **Do not delete the `.decomp` file while the bundle is in use.** After closing UABEA, `.decomp` files can be safely deleted — they will be recreated on the next open.
+
+<Note>
+  `.decomp` files are not cleaned up automatically. If disk space is a concern, delete old `.decomp` files manually after you finish working.
+</Note>
+
+## Extracting files from a bundle
+
+<Tabs>
+  <Tab title="Single file">
+    <Steps>
+      <Step title="Select the entry">
+        Choose the file you want from the dropdown in the main window.
+      </Step>
+      <Step title="Click Export">
+        Click **Export** and choose a destination path. The decompressed serialized file is written to disk.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="All files">
+    <Steps>
+      <Step title="Click Export All">
+        Click **Export All** in the main window toolbar.
+      </Step>
+      <Step title="Choose a directory">
+        Select a destination folder. UABEA exports every entry in the bundle, preserving subdirectory paths embedded in the bundle's directory listing.
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+## Replacing serialized files inside a bundle
+
+<Steps>
+  <Step title="Edit the assets file">
+    Either extract the serialized file and edit it externally, or click **Info** in the main window to open and edit the assets directly in UABEA.
+  </Step>
+  <Step title="Import the modified file">
+    Click **Import** in the main window. Select the modified serialized file. UABEA prompts you to confirm whether the file is serialized (assets file) or raw. Choose **Yes** for standard assets files.
+
+    The imported file replaces the selected bundle entry in memory.
+  </Step>
+  <Step title="Verify">
+    Click **Info** again to confirm the modified assets loaded correctly.
+  </Step>
+</Steps>
+
+For bulk replacement, **Import All** reads an entire directory and matches files to bundle entries by relative path name.
+
+## Repacking and saving the bundle
+
+After making changes (importing modified files, renaming, or removing entries), save the bundle:
+
+- **File → Save** — overwrites the original bundle file with the modified, decompressed data.
+- **File → Save As** — writes to a new path.
+- **File → Compress** — saves and re-compresses the bundle (prompts for compression type).
+
+<Warning>
+  Saving a bundle produces an **uncompressed** file by default (when using Save or Save As). Use **Compress** if you need to ship a compressed bundle back to the game. Some games validate bundle compression type and may refuse to load an uncompressed file.
+</Warning>
+
+## Bundle file naming conventions
+
+Unity itself imposes no naming rules, but common patterns you will encounter:
+
+| Pattern | Description |
+|---------|-------------|
+| `sharedassets0.assets` | Shared serialized file, not a bundle |
+| `resources.assets` | Global resources file, not a bundle |
+| `*.bundle` / `*.assetbundle` | Typical bundle extensions |
+| `*.bundle.split0`, `*.bundle.split1` | Split bundles for platforms with file size limits — UABEA can load these |
+| `StreamingAssets/aa/*/something.bundle` | Addressables bundles — see the [Addressables guide](/guides/addressables) |
+
+<Tip>
+  When you are unsure whether a file is a bundle or a serialized file, just open it — UABEA's automatic detection will determine the type and open the correct interface.
+</Tip>
